@@ -1,0 +1,1313 @@
+{
+ "uid": "eks-logs-explorer",
+ "title": "EKS Pod Logs Explorer",
+ "tags": [
+  "eks",
+  "clickhouse",
+  "logs"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 1,
+ "editable": true,
+ "graphTooltip": 1,
+ "refresh": "",
+ "time": {
+  "from": "now-7d",
+  "to": "now"
+ },
+ "timepicker": {
+  "refresh_intervals": [
+   "30s",
+   "1m",
+   "5m",
+   "15m"
+  ]
+ },
+ "templating": {
+  "list": [
+   {
+    "type": "datasource",
+    "name": "ds_ch",
+    "label": "ClickHouse",
+    "query": "grafana-clickhouse-datasource",
+    "refresh": 1,
+    "hide": 0,
+    "current": {
+     "selected": true,
+     "text": "ClickHouse",
+     "value": "clickhouse"
+    }
+   },
+   {
+    "type": "query",
+    "name": "l_namespace",
+    "label": "Namespace",
+    "datasource": {
+     "type": "grafana-clickhouse-datasource",
+     "uid": "${ds_ch}"
+    },
+    "refresh": 1,
+    "multi": true,
+    "includeAll": true,
+    "allValue": ".*",
+    "query": "SELECT DISTINCT namespace FROM observability.logs WHERE timestamp >= now() - INTERVAL 7 DAY ORDER BY namespace",
+    "definition": "SELECT DISTINCT namespace FROM observability.logs WHERE timestamp >= now() - INTERVAL 7 DAY ORDER BY namespace",
+    "sort": 1,
+    "hide": 0,
+    "skipUrlSync": false,
+    "current": {
+     "selected": true,
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "type": "query",
+    "name": "l_deployment",
+    "label": "Deployment",
+    "datasource": {
+     "type": "grafana-clickhouse-datasource",
+     "uid": "${ds_ch}"
+    },
+    "refresh": 1,
+    "multi": true,
+    "includeAll": true,
+    "allValue": ".*",
+    "query": "SELECT DISTINCT workload FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(namespace, '^${l_namespace:regex}$') ORDER BY workload",
+    "definition": "SELECT DISTINCT workload FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(namespace, '^${l_namespace:regex}$') ORDER BY workload",
+    "sort": 1,
+    "hide": 0,
+    "skipUrlSync": false,
+    "current": {
+     "selected": true,
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "type": "query",
+    "name": "l_pod",
+    "label": "Pod",
+    "datasource": {
+     "type": "grafana-clickhouse-datasource",
+     "uid": "${ds_ch}"
+    },
+    "refresh": 1,
+    "multi": true,
+    "includeAll": true,
+    "allValue": ".*",
+    "query": "SELECT DISTINCT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(namespace, '^${l_namespace:regex}$') AND match(workload, '^${l_deployment:regex}$') ORDER BY pod",
+    "definition": "SELECT DISTINCT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(namespace, '^${l_namespace:regex}$') AND match(workload, '^${l_deployment:regex}$') ORDER BY pod",
+    "sort": 1,
+    "hide": 0,
+    "skipUrlSync": false,
+    "current": {
+     "selected": true,
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "type": "query",
+    "name": "l_node",
+    "label": "Node",
+    "datasource": {
+     "type": "grafana-clickhouse-datasource",
+     "uid": "${ds_ch}"
+    },
+    "refresh": 1,
+    "multi": true,
+    "includeAll": true,
+    "allValue": ".*",
+    "query": "SELECT DISTINCT node FROM observability.node_inventory WHERE ts >= now() - INTERVAL 14 DAY ORDER BY node",
+    "definition": "SELECT DISTINCT node FROM observability.node_inventory WHERE ts >= now() - INTERVAL 14 DAY ORDER BY node",
+    "sort": 1,
+    "hide": 0,
+    "skipUrlSync": false,
+    "current": {
+     "selected": true,
+     "text": "All",
+     "value": "$__all"
+    }
+   },
+   {
+    "type": "custom",
+    "name": "l_level",
+    "label": "Level",
+    "query": "error,warning,info,debug",
+    "multi": true,
+    "includeAll": true,
+    "hide": 0,
+    "skipUrlSync": false,
+    "current": {
+     "selected": true,
+     "text": "All",
+     "value": "$__all"
+    },
+    "options": [
+     {
+      "selected": true,
+      "text": "All",
+      "value": "$__all"
+     },
+     {
+      "selected": false,
+      "text": "error",
+      "value": "error"
+     },
+     {
+      "selected": false,
+      "text": "warning",
+      "value": "warning"
+     },
+     {
+      "selected": false,
+      "text": "info",
+      "value": "info"
+     },
+     {
+      "selected": false,
+      "text": "debug",
+      "value": "debug"
+     }
+    ]
+   },
+   {
+    "type": "textbox",
+    "name": "l_container",
+    "label": "Container regex",
+    "query": ".*",
+    "current": {
+     "text": ".*",
+     "value": ".*"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "l_search",
+    "label": "Log contains",
+    "query": "",
+    "current": {
+     "text": "",
+     "value": ""
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "l_exclude",
+    "label": "Exclude lines containing",
+    "query": "",
+    "current": {
+     "text": "",
+     "value": ""
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   }
+  ]
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "row",
+   "title": "Summary (for the selected filters and time range)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   },
+   "panels": []
+  },
+  {
+   "type": "stat",
+   "title": "Log lines",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT count() FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0)",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 2,
+   "gridPos": {
+    "h": 3,
+    "w": 8,
+    "x": 0,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Errors",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT countIf(multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') = 'error') FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0)",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       },
+       {
+        "color": "red",
+        "value": 100
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 3,
+   "gridPos": {
+    "h": 3,
+    "w": 4,
+    "x": 8,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Warnings",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT countIf(multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') = 'warning') FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0)",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       },
+       {
+        "color": "red",
+        "value": 1000
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 4,
+   "gridPos": {
+    "h": 3,
+    "w": 4,
+    "x": 12,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Pods logging",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT uniqExact(pod_name) FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0)",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 5,
+   "gridPos": {
+    "h": 3,
+    "w": 4,
+    "x": 16,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Namespaces",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT uniqExact(namespace) FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0)",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 6,
+   "gridPos": {
+    "h": 3,
+    "w": 4,
+    "x": 20,
+    "y": 1
+   }
+  },
+  {
+   "id": 7,
+   "type": "row",
+   "title": "Volume",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 4
+   },
+   "panels": []
+  },
+  {
+   "type": "timeseries",
+   "title": "Log volume by level",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(timestamp) AS time, multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') AS level, count() AS lines FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0) GROUP BY time, level ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 25,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 8,
+   "gridPos": {
+    "h": 8,
+    "w": 15,
+    "x": 0,
+    "y": 5
+   }
+  },
+  {
+   "type": "table",
+   "title": "Top pods by log lines",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT pod_name AS \"Pod\", count() AS \"Lines\", countIf(multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') = 'error') AS \"Errors\", countIf(multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') = 'warning') AS \"Warnings\" FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0) GROUP BY pod_name ORDER BY \"Lines\" DESC LIMIT 15",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Lines"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "short"
+       },
+       {
+        "id": "custom.width",
+        "value": 90
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Errors"
+      },
+      "properties": [
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 1
+          },
+          {
+           "color": "red",
+           "value": 100
+          }
+         ]
+        }
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-text"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 80
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Warnings"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 90
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 9,
+   "gridPos": {
+    "h": 8,
+    "w": 9,
+    "x": 15,
+    "y": 5
+   }
+  },
+  {
+   "id": 10,
+   "type": "row",
+   "title": "Logs \u2014 click a column's filter icon to refine; newest first",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 13
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Pod logs (table with column filters)",
+   "description": "Newest 3000 lines that match the dropdowns above. Use the filter icon in any column header (Level, Namespace, Deployment, Pod, Container) for quick checkbox filtering, or sort by clicking a header.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT timestamp AS \"Time\", multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') AS \"Level\", namespace AS \"Namespace\", if(m.workload != '', m.workload, replaceRegexpOne(l.pod_name, '-[a-z0-9]{8,10}-[a-z0-9]{5}$', '')) AS \"Deployment\", l.pod_name AS \"Pod\", container AS \"Container\", node AS \"Node\", message AS \"Message\" FROM observability.logs AS l LEFT JOIN (SELECT pod, argMax(workload, ts) AS workload FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY GROUP BY pod) AS m ON l.pod_name = m.pod WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0) ORDER BY timestamp DESC LIMIT 3000",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Level"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "error": {
+            "color": "red",
+            "index": 0,
+            "text": "error"
+           },
+           "warning": {
+            "color": "orange",
+            "index": 1,
+            "text": "warning"
+           },
+           "info": {
+            "color": "blue",
+            "index": 2,
+            "text": "info"
+           },
+           "debug": {
+            "color": "purple",
+            "index": 3,
+            "text": "debug"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Time"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 170
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Namespace"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Deployment"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 200
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Pod"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 260
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Container"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Node"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 190
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Message"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 900
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 11,
+   "gridPos": {
+    "h": 14,
+    "w": 24,
+    "x": 0,
+    "y": 14
+   }
+  },
+  {
+   "type": "logs",
+   "title": "Pod logs (stream view)",
+   "description": "Same filters, formatted like a terminal. Click a line to expand its fields.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 2,
+     "queryType": "logs",
+     "rawSql": "SELECT timestamp, message AS body, multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') AS level, namespace, replaceRegexpOne(pod_name, '-[a-z0-9]{8,10}-[a-z0-9]{5}$', '') AS deployment, pod_name, container, node FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0) ORDER BY timestamp DESC LIMIT 1000",
+     "refId": "A"
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "wrapLogMessage": true,
+    "sortOrder": "Descending",
+    "enableLogDetails": true,
+    "prettifyLogMessage": false,
+    "dedupStrategy": "none"
+   },
+   "id": 12,
+   "gridPos": {
+    "h": 14,
+    "w": 24,
+    "x": 0,
+    "y": 28
+   }
+  },
+  {
+   "id": 13,
+   "type": "row",
+   "title": "What is failing",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 42
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Most frequent errors (numbers collapsed)",
+   "description": "Tip: copy a noisy pattern into 'Exclude lines containing' to hide it.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT substring(replaceRegexpAll(message, '[0-9]+', '#'), 1, 220) AS \"Error pattern\", count() AS \"Count\", uniqExact(pod_name) AS \"Pods\", max(timestamp) AS \"Last seen\" FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0) AND multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') = 'error' GROUP BY \"Error pattern\" ORDER BY \"Count\" DESC LIMIT 25",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Error pattern"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 620
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Count"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "short"
+       },
+       {
+        "id": "custom.width",
+        "value": 90
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Pods"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 70
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 14,
+   "gridPos": {
+    "h": 9,
+    "w": 14,
+    "x": 0,
+    "y": 43
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "Errors by deployment",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT replaceRegexpOne(pod_name, '-[a-z0-9]{8,10}-[a-z0-9]{5}$', '') AS deployment, countIf(multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') = 'error') AS errors FROM observability.logs WHERE $__timeFilter(timestamp) AND match(namespace, '^${l_namespace:regex}$') AND ('${l_deployment:regex}' = '.*' OR pod_name IN (SELECT pod FROM observability.pod_inventory WHERE ts >= now() - INTERVAL 14 DAY AND match(workload, '^${l_deployment:regex}$'))) AND match(pod_name, '^${l_pod:regex}$') AND (match(node, '^${l_node:regex}$') OR node = '') AND match(container, '${l_container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${l_level:singlequote}) AND positionCaseInsensitive(message, '${l_search:raw}') > 0 AND ('${l_exclude:raw}' = '' OR positionCaseInsensitive(message, '${l_exclude:raw}') = 0) GROUP BY deployment HAVING errors > 0 ORDER BY errors DESC LIMIT 12",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "min": 0,
+     "max": null,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 10
+       },
+       {
+        "color": "red",
+        "value": 100
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "displayMode": "gradient",
+    "orientation": "horizontal",
+    "showUnfilled": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": true
+    }
+   },
+   "id": 15,
+   "gridPos": {
+    "h": 9,
+    "w": 10,
+    "x": 14,
+    "y": 43
+   }
+  }
+ ],
+ "annotations": {
+  "list": [
+   {
+    "builtIn": 1,
+    "datasource": {
+     "type": "grafana",
+     "uid": "-- Grafana --"
+    },
+    "enable": true,
+    "hide": true,
+    "iconColor": "rgba(0, 211, 255, 1)",
+    "name": "Annotations & Alerts",
+    "type": "dashboard"
+   }
+  ]
+ },
+ "links": [
+  {
+   "title": "Yesterday",
+   "type": "link",
+   "url": "/d/eks-logs-explorer?from=now-1d%2Fd&to=now-1d%2Fd",
+   "icon": "calendar-alt",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Yesterday 00:00 to 23:59 (browser time zone)"
+  },
+  {
+   "title": "Today",
+   "type": "link",
+   "url": "/d/eks-logs-explorer?from=now%2Fd&to=now",
+   "icon": "calendar-alt",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Today so far"
+  },
+  {
+   "title": "15 min",
+   "type": "link",
+   "url": "/d/eks-logs-explorer?from=now-15m&to=now",
+   "icon": "clock",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Show the last 15m"
+  },
+  {
+   "title": "1 hour",
+   "type": "link",
+   "url": "/d/eks-logs-explorer?from=now-1h&to=now",
+   "icon": "clock",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Show the last 1h"
+  },
+  {
+   "title": "6 hours",
+   "type": "link",
+   "url": "/d/eks-logs-explorer?from=now-6h&to=now",
+   "icon": "clock",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Show the last 6h"
+  },
+  {
+   "title": "24 hours",
+   "type": "link",
+   "url": "/d/eks-logs-explorer?from=now-24h&to=now",
+   "icon": "clock",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Show the last 24h"
+  },
+  {
+   "title": "3 days",
+   "type": "link",
+   "url": "/d/eks-logs-explorer?from=now-3d&to=now",
+   "icon": "clock",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Show the last 3d"
+  },
+  {
+   "title": "7 days",
+   "type": "link",
+   "url": "/d/eks-logs-explorer?from=now-7d&to=now",
+   "icon": "clock",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Show the last 7d"
+  },
+  {
+   "title": "Main dashboard",
+   "type": "link",
+   "url": "/d/eks-observability",
+   "icon": "dashboard",
+   "includeVars": false,
+   "keepTime": true,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Back to EKS Observability"
+  }
+ ]
+}
