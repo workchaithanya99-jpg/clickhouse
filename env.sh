@@ -1,0 +1,12 @@
+export AWS_REGION=us-east-1
+export ACCOUNT_ID=
+export CLUSTER_NAME=test-cluster
+export CHI_NAME=eks-test
+export CH_HOST=chi-eks-test-cluster-0-0.monitoring.svc.cluster.local
+export VPC_CIDR=10.0.0.0/8
+export S3_BUCKET=
+export STORAGE_CLASS=gp3
+export CH_STORAGE=50Gi
+export LOG_RETENTION_DAYS=7
+export INVENTORY_RETENTION_DAYS=14
+export OIDC_ID=
