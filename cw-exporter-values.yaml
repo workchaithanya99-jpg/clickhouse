@@ -1,0 +1,22 @@
+serviceAccount:
+  create: true
+  name: cloudwatch-exporter
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::555552813318:role/cloudwatch-exporter-role
+serviceMonitor:
+  enabled: true
+  labels:
+    release: monitoring
+config: |-
+  region: us-east-1
+  period_seconds: 60
+  delay_seconds: 120
+  metrics:
+    - {aws_namespace: AWS/RDS, aws_metric_name: CPUUtilization,      aws_dimensions: [DBInstanceIdentifier], aws_statistics: [Average]}
+    - {aws_namespace: AWS/RDS, aws_metric_name: FreeableMemory,      aws_dimensions: [DBInstanceIdentifier], aws_statistics: [Average]}
+    - {aws_namespace: AWS/RDS, aws_metric_name: DatabaseConnections, aws_dimensions: [DBInstanceIdentifier], aws_statistics: [Average]}
+    - {aws_namespace: AWS/RDS, aws_metric_name: FreeStorageSpace,    aws_dimensions: [DBInstanceIdentifier], aws_statistics: [Average]}
+    - {aws_namespace: AWS/RDS, aws_metric_name: ReadIOPS,            aws_dimensions: [DBInstanceIdentifier], aws_statistics: [Average]}
+    - {aws_namespace: AWS/RDS, aws_metric_name: WriteIOPS,           aws_dimensions: [DBInstanceIdentifier], aws_statistics: [Average]}
+    - {aws_namespace: AWS/RDS, aws_metric_name: ReadLatency,         aws_dimensions: [DBInstanceIdentifier], aws_statistics: [Average]}
+    - {aws_namespace: AWS/RDS, aws_metric_name: WriteLatency,        aws_dimensions: [DBInstanceIdentifier], aws_statistics: [Average]}
