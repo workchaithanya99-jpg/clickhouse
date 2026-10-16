@@ -1,0 +1,6225 @@
+{
+ "uid": "eks-observability",
+ "title": "EKS Observability \u2014 nodes, deployments, pods, logs, databases",
+ "tags": [
+  "eks",
+  "clickhouse",
+  "observability"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "version": 1,
+ "editable": true,
+ "graphTooltip": 1,
+ "refresh": "1m",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "timepicker": {
+  "refresh_intervals": [
+   "30s",
+   "1m",
+   "5m",
+   "15m"
+  ]
+ },
+ "templating": {
+  "list": [
+   {
+    "type": "datasource",
+    "name": "ds_ch",
+    "label": "ClickHouse",
+    "query": "grafana-clickhouse-datasource",
+    "refresh": 1,
+    "hide": 0,
+    "current": {
+     "selected": true,
+     "text": "ClickHouse",
+     "value": "clickhouse"
+    },
+    "skipUrlSync": false
+   },
+   {
+    "type": "datasource",
+    "name": "ds_prom",
+    "label": "Prometheus",
+    "query": "prometheus",
+    "refresh": 1,
+    "hide": 0,
+    "current": {
+     "selected": true,
+     "text": "Prometheus",
+     "value": "prometheus"
+    },
+    "skipUrlSync": false
+   },
+   {
+    "type": "query",
+    "name": "node",
+    "label": "Node",
+    "datasource": {
+     "type": "grafana-clickhouse-datasource",
+     "uid": "${ds_ch}"
+    },
+    "refresh": 1,
+    "multi": true,
+    "includeAll": true,
+    "query": "SELECT DISTINCT node FROM observability.node_latest ORDER BY node",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    },
+    "hide": 0,
+    "skipUrlSync": false,
+    "definition": "SELECT DISTINCT node FROM observability.node_latest ORDER BY node",
+    "sort": 1
+   },
+   {
+    "type": "query",
+    "name": "namespace",
+    "label": "Namespace",
+    "datasource": {
+     "type": "grafana-clickhouse-datasource",
+     "uid": "${ds_ch}"
+    },
+    "refresh": 1,
+    "multi": true,
+    "includeAll": true,
+    "query": "SELECT DISTINCT namespace FROM observability.pod_latest ORDER BY namespace",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    },
+    "hide": 0,
+    "skipUrlSync": false,
+    "definition": "SELECT DISTINCT namespace FROM observability.pod_latest ORDER BY namespace",
+    "sort": 1
+   },
+   {
+    "type": "textbox",
+    "name": "pod_search",
+    "label": "Pod / deployment regex",
+    "query": ".*",
+    "current": {
+     "text": ".*",
+     "value": ".*"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "log_search",
+    "label": "Log contains",
+    "query": "",
+    "current": {
+     "text": "",
+     "value": ""
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "custom",
+    "name": "level",
+    "label": "Level",
+    "query": "error,warning,info,debug",
+    "multi": true,
+    "includeAll": true,
+    "current": {
+     "selected": true,
+     "text": "All",
+     "value": "$__all"
+    },
+    "options": [
+     {
+      "selected": true,
+      "text": "All",
+      "value": "$__all"
+     },
+     {
+      "selected": false,
+      "text": "error",
+      "value": "error"
+     },
+     {
+      "selected": false,
+      "text": "warning",
+      "value": "warning"
+     },
+     {
+      "selected": false,
+      "text": "info",
+      "value": "info"
+     },
+     {
+      "selected": false,
+      "text": "debug",
+      "value": "debug"
+     }
+    ],
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "container",
+    "label": "Container regex",
+    "query": ".*",
+    "current": {
+     "text": ".*",
+     "value": ".*"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "custom",
+    "name": "event_type",
+    "label": "Event type",
+    "query": "Normal,Warning",
+    "multi": true,
+    "includeAll": true,
+    "current": {
+     "selected": true,
+     "text": "All",
+     "value": "$__all"
+    },
+    "options": [
+     {
+      "selected": true,
+      "text": "All",
+      "value": "$__all"
+     },
+     {
+      "selected": false,
+      "text": "Normal",
+      "value": "Normal"
+     },
+     {
+      "selected": false,
+      "text": "Warning",
+      "value": "Warning"
+     }
+    ],
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "reason",
+    "label": "Event reason regex",
+    "query": ".*",
+    "current": {
+     "text": ".*",
+     "value": ".*"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "db_pod_regex",
+    "label": "DB pod regex",
+    "query": "(?i)(keydb|redis|postgres|mysql|maria|mongo|rds)",
+    "current": {
+     "text": "(?i)(keydb|redis|postgres|mysql|maria|mongo|rds)",
+     "value": "(?i)(keydb|redis|postgres|mysql|maria|mongo|rds)"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "query",
+    "name": "rds",
+    "label": "RDS instance",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "${ds_prom}"
+    },
+    "refresh": 1,
+    "multi": true,
+    "includeAll": true,
+    "query": {
+     "query": "label_values(aws_rds_cpuutilization_average, dbinstance_identifier)",
+     "refId": "StandardVariableQuery"
+    },
+    "definition": "label_values(aws_rds_cpuutilization_average, dbinstance_identifier)",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "query",
+    "name": "redis_inst",
+    "label": "KeyDB instance",
+    "datasource": {
+     "type": "prometheus",
+     "uid": "${ds_prom}"
+    },
+    "refresh": 1,
+    "multi": true,
+    "includeAll": true,
+    "query": {
+     "query": "label_values(redis_up, instance)",
+     "refId": "StandardVariableQuery"
+    },
+    "definition": "label_values(redis_up, instance)",
+    "current": {
+     "text": "All",
+     "value": "$__all"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "s3_bucket",
+    "label": "S3 bucket",
+    "query": "logs-store-bucket-ACCOUNT-REGION-an",
+    "current": {
+     "text": "logs-store-bucket-ACCOUNT-REGION-an",
+     "value": "logs-store-bucket-ACCOUNT-REGION-an"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "s3_region",
+    "label": "S3 region",
+    "query": "ap-south-1",
+    "current": {
+     "text": "ap-south-1",
+     "value": "ap-south-1"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "s3_year",
+    "label": "S3 year",
+    "query": "2026",
+    "current": {
+     "text": "2026",
+     "value": "2026"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "s3_month",
+    "label": "S3 month (MM)",
+    "query": "10",
+    "current": {
+     "text": "10",
+     "value": "10"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   },
+   {
+    "type": "textbox",
+    "name": "s3_day",
+    "label": "S3 day (DD)",
+    "query": "15",
+    "current": {
+     "text": "15",
+     "value": "15"
+    },
+    "hide": 0,
+    "skipUrlSync": false
+   }
+  ]
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "row",
+   "title": "1 \u00b7 Cluster overview",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 0
+   },
+   "panels": []
+  },
+  {
+   "type": "stat",
+   "title": "Nodes",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT count() FROM observability.node_latest",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 2,
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 0,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Nodes NotReady",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT countIf(ready = 0) FROM observability.node_latest",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       },
+       {
+        "color": "red",
+        "value": 1
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 3,
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 3,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Tainted nodes",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT countIf(is_tainted = 1) FROM observability.node_latest",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 4,
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 6,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Dedicated nodes",
+   "description": "Dedicated = has a custom (non-system) taint, or a 'dedicated' / 'workload-type' label.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT countIf(node_class = 'dedicated') FROM observability.node_latest",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 5,
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 9,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Pods running",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT countIf(state = 'Running') FROM observability.pod_latest",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "value",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 6,
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 12,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Pods with problems",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT countIf(state NOT IN ('Running','Succeeded')) FROM observability.pod_latest",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       },
+       {
+        "color": "red",
+        "value": 5
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 7,
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 15,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Deployments degraded",
+   "description": "Deployments (and StatefulSets / DaemonSets) where ready < desired.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT countIf(ready < desired) FROM observability.deployment_latest",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       },
+       {
+        "color": "red",
+        "value": 3
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 8,
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 18,
+    "y": 1
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Inventory age (s)",
+   "description": "Seconds since the inventory collector last wrote a snapshot. Should stay under ~90s.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT dateDiff('second', max(ts), now()) FROM observability.pod_inventory",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 180
+       },
+       {
+        "color": "red",
+        "value": 600
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 9,
+   "gridPos": {
+    "h": 4,
+    "w": 3,
+    "x": 21,
+    "y": 1
+   }
+  },
+  {
+   "id": 10,
+   "type": "row",
+   "title": "2 \u00b7 Nodes \u2014 taint, shared/dedicated, IPs, capacity",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 5
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Nodes",
+   "description": "Live node inventory. CPU %/Mem % come from node-exporter; 'Max pods' is the kubelet's allocatable pod count.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT node AS \"Node\", internal_ip AS \"Internal IP\", external_ip AS \"Public IP\", nodegroup AS \"Node group\",\n  instance_type AS \"Type\", capacity_type AS \"Capacity\", zone AS \"AZ\",\n  node_class AS \"Class\", if(is_tainted = 1, 'Tainted', 'Untainted') AS \"Taint\",\n  arrayStringConcat(taints, ',  ') AS \"Taints\", if(ready = 1, 'Ready', 'NotReady') AS \"Status\",\n  pods_scheduled AS \"Pods\", pods_alloc AS \"Max pods\", round(100 * pods_scheduled / nullIf(pods_alloc, 0), 1) AS \"Pod slots %\",\n  cpu_used_pct AS \"CPU %\", mem_used_pct AS \"Mem %\", cpu_alloc_m AS \"CPU alloc (m)\", mem_alloc_b AS \"Mem alloc\", kubelet_version AS \"Kubelet\"\nFROM observability.node_latest WHERE node IN (${node:singlequote}) ORDER BY node",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Taint"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Tainted": {
+            "color": "orange",
+            "index": 0,
+            "text": "Tainted"
+           },
+           "Untainted": {
+            "color": "green",
+            "index": 1,
+            "text": "Untainted"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Class"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "dedicated": {
+            "color": "purple",
+            "index": 0,
+            "text": "dedicated"
+           },
+           "shared": {
+            "color": "blue",
+            "index": 1,
+            "text": "shared"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Status"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Ready": {
+            "color": "green",
+            "index": 0,
+            "text": "Ready"
+           },
+           "NotReady": {
+            "color": "red",
+            "index": 1,
+            "text": "NotReady"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Pod slots %"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 70
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU %"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 70
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem %"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 75
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU alloc (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem alloc"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Taints"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 300
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": [
+     {
+      "displayName": "Node",
+      "desc": false
+     }
+    ]
+   },
+   "id": 11,
+   "gridPos": {
+    "h": 10,
+    "w": 24,
+    "x": 0,
+    "y": 6
+   }
+  },
+  {
+   "id": 12,
+   "type": "row",
+   "title": "3 \u00b7 Per node \u2014 deployments, replicas, CPU & memory vs. limits",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 16
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Deployments per node (one row per deployment \u2014 pods are aggregated, never repeated)",
+   "description": "Each deployment appears once per node it runs on. 'Pods on node' = replicas of that deployment placed on this node. Limits/requests are the sums of what is set in the YAML; '% of limit' only counts pods that have a limit. Replicas show '-' for Jobs/CronJobs/bare pods.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT if(p.node = '', '(unscheduled)', p.node) AS \"Node\", any(p.host_ip) AS \"Node IP\", p.namespace AS \"Namespace\",\n  p.workload_kind AS \"Kind\", p.workload AS \"Deployment\",\n  max(d.desired) AS \"Replicas desired\", max(d.ready) AS \"Replicas ready\", count() AS \"Pods on node\",\n  round(sum(p.cpu_use_m)) AS \"CPU use (m)\", sum(p.cpu_req_m) AS \"CPU request (m)\", sumIf(p.cpu_lim_m, p.cpu_lim_m > 0) AS \"CPU limit (m)\",\n  round(100 * sumIf(p.cpu_use_m, p.cpu_lim_m > 0) / nullIf(sumIf(p.cpu_lim_m, p.cpu_lim_m > 0), 0), 1) AS \"CPU % of limit\",\n  round(100 * sumIf(p.cpu_use_m, p.cpu_req_m > 0) / nullIf(sumIf(p.cpu_req_m, p.cpu_req_m > 0), 0), 1) AS \"CPU % of request\",\n  sum(p.mem_use_b) AS \"Mem use\", sum(p.mem_req_b) AS \"Mem request\", sumIf(p.mem_lim_b, p.mem_lim_b > 0) AS \"Mem limit\",\n  round(100 * sumIf(p.mem_use_b, p.mem_lim_b > 0) / nullIf(sumIf(p.mem_lim_b, p.mem_lim_b > 0), 0), 1) AS \"Mem % of limit\",\n  round(100 * sumIf(p.mem_use_b, p.mem_req_b > 0) / nullIf(sumIf(p.mem_req_b, p.mem_req_b > 0), 0), 1) AS \"Mem % of request\",\n  countIf(p.cpu_lim_m = 0 OR p.mem_lim_b = 0) AS \"Pods w/o limit\"\nFROM observability.pod_latest AS p\nLEFT JOIN observability.deployment_latest AS d ON d.namespace = p.namespace AND d.name = p.workload AND d.kind = p.workload_kind\nWHERE (p.node IN (${node:singlequote}) OR p.node = '') AND p.namespace IN (${namespace:singlequote})\nGROUP BY p.node, p.namespace, p.workload_kind, p.workload\nORDER BY p.node, p.namespace, p.workload\nSETTINGS join_use_nulls = 1",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU use (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU request (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU limit (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem use"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem request"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU % of limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 75
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU % of request"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 100
+          },
+          {
+           "color": "red",
+           "value": 120
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem % of limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 80
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem % of request"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 100
+          },
+          {
+           "color": "red",
+           "value": 120
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Replicas desired"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "noValue",
+        "value": "-"
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Replicas ready"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "noValue",
+        "value": "-"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 13,
+   "gridPos": {
+    "h": 14,
+    "w": 24,
+    "x": 0,
+    "y": 17
+   }
+  },
+  {
+   "id": 14,
+   "type": "row",
+   "title": "4 \u00b7 Deployments & replicas",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 31
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Deployments / StatefulSets / DaemonSets",
+   "description": "Desired vs ready replicas with the total resource use across all replicas. Click a column header to sort; use the filter icon to search.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT d.namespace AS \"Namespace\", d.name AS \"Deployment\", d.kind AS \"Kind\",\n  d.desired AS \"Desired\", d.ready AS \"Ready\", d.available AS \"Available\", d.updated AS \"Updated\",\n  multiIf(d.desired = 0, 'ScaledToZero', d.ready >= d.desired, 'Healthy', d.ready = 0, 'Down', 'Degraded') AS \"Status\",\n  uniqExactIf(p.node, p.node != '') AS \"Nodes used\", arrayStringConcat(groupUniqArrayIf(p.node, p.node != ''), ', ') AS \"Node list\",\n  sum(p.restarts) AS \"Restarts\", round(sum(p.cpu_use_m)) AS \"CPU use (m)\", sumIf(p.cpu_lim_m, p.cpu_lim_m > 0) AS \"CPU limit (m)\",\n  round(100 * sumIf(p.cpu_use_m, p.cpu_lim_m > 0) / nullIf(sumIf(p.cpu_lim_m, p.cpu_lim_m > 0), 0), 1) AS \"CPU % of limit\",\n  sum(p.mem_use_b) AS \"Mem use\", sumIf(p.mem_lim_b, p.mem_lim_b > 0) AS \"Mem limit\",\n  round(100 * sumIf(p.mem_use_b, p.mem_lim_b > 0) / nullIf(sumIf(p.mem_lim_b, p.mem_lim_b > 0), 0), 1) AS \"Mem % of limit\",\n  arrayStringConcat(any(d.images), ', ') AS \"Images\"\nFROM observability.deployment_latest AS d\nLEFT JOIN observability.pod_latest AS p ON p.namespace = d.namespace AND p.workload = d.name AND p.workload_kind = d.kind\nWHERE d.namespace IN (${namespace:singlequote}) AND match(d.name, '${pod_search:raw}')\nGROUP BY d.namespace, d.name, d.kind, d.desired, d.ready, d.available, d.updated\nORDER BY (d.ready < d.desired) DESC, d.namespace, d.name",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Status"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Healthy": {
+            "color": "green",
+            "index": 0,
+            "text": "Healthy"
+           },
+           "Degraded": {
+            "color": "orange",
+            "index": 1,
+            "text": "Degraded"
+           },
+           "Down": {
+            "color": "red",
+            "index": 2,
+            "text": "Down"
+           },
+           "ScaledToZero": {
+            "color": "blue",
+            "index": 3,
+            "text": "ScaledToZero"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU use (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU limit (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem use"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU % of limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 75
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem % of limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 80
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Images"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 320
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Node list"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 260
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 15,
+   "gridPos": {
+    "h": 10,
+    "w": 16,
+    "x": 0,
+    "y": 32
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Replicas desired vs ready (selected namespaces)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(ts) AS time, sum(desired) AS desired, sum(ready) AS ready\nFROM observability.deployment_inventory WHERE $__timeFilter(ts) AND namespace IN (${namespace:singlequote})\nGROUP BY time ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 16,
+   "gridPos": {
+    "h": 10,
+    "w": 8,
+    "x": 16,
+    "y": 32
+   }
+  },
+  {
+   "id": 17,
+   "type": "row",
+   "title": "5 \u00b7 All pods",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 42
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Pods (current)",
+   "description": "Every pod in the cluster, filtered by the Node / Namespace / Pod regex variables at the top. Click a pod name to jump to its logs.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT namespace AS \"Namespace\", pod AS \"Pod\", workload_kind AS \"Kind\", workload AS \"Deployment\",\n  if(node = '', '(unscheduled)', node) AS \"Node\", host_ip AS \"Node IP\", pod_ip AS \"Pod IP\", state AS \"State\",\n  restarts AS \"Restarts\", last_term_reason AS \"Last exit\",\n  formatReadableTimeDelta(dateDiff('second', created, now()), 'days', 'minutes') AS \"Age\",\n  round(cpu_use_m) AS \"CPU use (m)\", cpu_req_m AS \"CPU req (m)\", cpu_lim_m AS \"CPU limit (m)\",\n  round(100 * cpu_use_m / nullIf(cpu_lim_m, 0), 1) AS \"CPU % of limit\",\n  mem_use_b AS \"Mem use\", mem_req_b AS \"Mem req\", mem_lim_b AS \"Mem limit\",\n  round(100 * mem_use_b / nullIf(mem_lim_b, 0), 1) AS \"Mem % of limit\", qos AS \"QoS\"\nFROM observability.pod_latest WHERE (node IN (${node:singlequote}) OR node = '') AND namespace IN (${namespace:singlequote}) AND match(pod, '${pod_search:raw}') ORDER BY namespace, workload, pod",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "State"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Running": {
+            "color": "green",
+            "index": 0,
+            "text": "Running"
+           },
+           "Succeeded": {
+            "color": "blue",
+            "index": 1,
+            "text": "Succeeded"
+           },
+           "Pending": {
+            "color": "yellow",
+            "index": 2,
+            "text": "Pending"
+           },
+           "NotReady": {
+            "color": "orange",
+            "index": 3,
+            "text": "NotReady"
+           },
+           "Terminating": {
+            "color": "orange",
+            "index": 4,
+            "text": "Terminating"
+           },
+           "Unschedulable": {
+            "color": "red",
+            "index": 5,
+            "text": "Unschedulable"
+           },
+           "CrashLoopBackOff": {
+            "color": "red",
+            "index": 6,
+            "text": "CrashLoopBackOff"
+           },
+           "ImagePullBackOff": {
+            "color": "red",
+            "index": 7,
+            "text": "ImagePullBackOff"
+           },
+           "ErrImagePull": {
+            "color": "red",
+            "index": 8,
+            "text": "ErrImagePull"
+           },
+           "Failed": {
+            "color": "red",
+            "index": 9,
+            "text": "Failed"
+           },
+           "CreateContainerConfigError": {
+            "color": "red",
+            "index": 10,
+            "text": "CreateContainerConfigError"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU use (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU req (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU limit (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem use"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem req"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU % of limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 75
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem % of limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 80
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Pod"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 280
+       },
+       {
+        "id": "links",
+        "value": [
+         {
+          "title": "Open logs for this pod",
+          "url": "/d/eks-observability?var-pod_search=${__value.raw}&var-log_search=&${__url_time_range}"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Restarts"
+      },
+      "properties": [
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 3
+          },
+          {
+           "color": "red",
+           "value": 10
+          }
+         ]
+        }
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-text"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 18,
+   "gridPos": {
+    "h": 12,
+    "w": 24,
+    "x": 0,
+    "y": 43
+   }
+  },
+  {
+   "type": "piechart",
+   "title": "Pods by state",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT state, count() AS pods FROM observability.pod_latest GROUP BY state ORDER BY pods DESC",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "options": {
+    "pieType": "donut",
+    "displayLabels": [
+     "name",
+     "value"
+    ],
+    "legend": {
+     "displayMode": "table",
+     "placement": "right",
+     "values": [
+      "value"
+     ]
+    },
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": true
+    }
+   },
+   "id": 19,
+   "gridPos": {
+    "h": 9,
+    "w": 6,
+    "x": 0,
+    "y": 55
+   }
+  },
+  {
+   "type": "table",
+   "title": "Pods not Running (grouped by state)",
+   "description": "Pending, CrashLoopBackOff, ImagePullBackOff, Unschedulable, NotReady, Failed \u2026 Join with 'Events' below for the reason.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT namespace AS \"Namespace\", pod AS \"Pod\", workload AS \"Deployment\", if(node = '', '(unscheduled)', node) AS \"Node\",\n  state AS \"State\", last_term_reason AS \"Last exit\", restarts AS \"Restarts\"\nFROM observability.pod_latest WHERE state NOT IN ('Running','Succeeded') ORDER BY state, namespace, pod",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "State"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Running": {
+            "color": "green",
+            "index": 0,
+            "text": "Running"
+           },
+           "Succeeded": {
+            "color": "blue",
+            "index": 1,
+            "text": "Succeeded"
+           },
+           "Pending": {
+            "color": "yellow",
+            "index": 2,
+            "text": "Pending"
+           },
+           "NotReady": {
+            "color": "orange",
+            "index": 3,
+            "text": "NotReady"
+           },
+           "Terminating": {
+            "color": "orange",
+            "index": 4,
+            "text": "Terminating"
+           },
+           "Unschedulable": {
+            "color": "red",
+            "index": 5,
+            "text": "Unschedulable"
+           },
+           "CrashLoopBackOff": {
+            "color": "red",
+            "index": 6,
+            "text": "CrashLoopBackOff"
+           },
+           "ImagePullBackOff": {
+            "color": "red",
+            "index": 7,
+            "text": "ImagePullBackOff"
+           },
+           "ErrImagePull": {
+            "color": "red",
+            "index": 8,
+            "text": "ErrImagePull"
+           },
+           "Failed": {
+            "color": "red",
+            "index": 9,
+            "text": "Failed"
+           },
+           "CreateContainerConfigError": {
+            "color": "red",
+            "index": 10,
+            "text": "CreateContainerConfigError"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 20,
+   "gridPos": {
+    "h": 9,
+    "w": 18,
+    "x": 6,
+    "y": 55
+   }
+  },
+  {
+   "id": 21,
+   "type": "row",
+   "title": "6 \u00b7 Max pods per node & capacity history",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 64
+   },
+   "panels": []
+  },
+  {
+   "type": "bargauge",
+   "title": "Pod slots used (% of max pods per node)",
+   "description": "Max pods is set by the instance type's ENI/IP limits (VPC CNI) or kubelet maxPods. Near 100% = new pods go Pending.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT node, round(100 * pods_scheduled / nullIf(pods_alloc, 0), 1) AS pct FROM observability.node_latest WHERE node IN (${node:singlequote}) ORDER BY pct DESC",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "min": 0,
+     "max": 100,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 70
+       },
+       {
+        "color": "red",
+        "value": 90
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "displayMode": "gradient",
+    "orientation": "horizontal",
+    "showUnfilled": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": true
+    }
+   },
+   "id": 22,
+   "gridPos": {
+    "h": 9,
+    "w": 8,
+    "x": 0,
+    "y": 65
+   }
+  },
+  {
+   "type": "table",
+   "title": "Scheduling headroom",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT node AS \"Node\", node_class AS \"Class\", pods_scheduled AS \"Scheduled\", pods_alloc AS \"Max pods\",\n  greatest(toInt32(pods_alloc) - toInt32(pods_scheduled), 0) AS \"Free slots\",\n  round(100 * pods_scheduled / nullIf(pods_alloc, 0), 1) AS \"Used %\"\nFROM observability.node_latest WHERE node IN (${node:singlequote}) ORDER BY \"Free slots\"",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Used %"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 70
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Class"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "dedicated": {
+            "color": "purple",
+            "index": 0,
+            "text": "dedicated"
+           },
+           "shared": {
+            "color": "blue",
+            "index": 1,
+            "text": "shared"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Free slots"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 100
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 23,
+   "gridPos": {
+    "h": 9,
+    "w": 8,
+    "x": 8,
+    "y": 65
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Pods scheduled per node",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(ts) AS time, node, max(pods_scheduled) AS pods\nFROM observability.node_inventory WHERE $__timeFilter(ts) AND node IN (${node:singlequote}) GROUP BY time, node ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 24,
+   "gridPos": {
+    "h": 9,
+    "w": 8,
+    "x": 16,
+    "y": 65
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Node CPU % (node-exporter)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(ts) AS time, node, avg(cpu_used_pct) AS cpu\nFROM observability.node_inventory WHERE $__timeFilter(ts) AND node IN (${node:singlequote}) GROUP BY time, node ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     },
+     "min": 0,
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 25,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 74
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Node memory % (node-exporter)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(ts) AS time, node, avg(mem_used_pct) AS mem\nFROM observability.node_inventory WHERE $__timeFilter(ts) AND node IN (${node:singlequote}) GROUP BY time, node ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     },
+     "min": 0,
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 26,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 74
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Top 10 pods by CPU (m)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(ts) AS time, pod, avg(cpu_use_m) AS cpu\nFROM observability.pod_inventory WHERE $__timeFilter(ts) AND namespace IN (${namespace:singlequote})\n  AND pod IN (SELECT pod FROM observability.pod_latest WHERE namespace IN (${namespace:singlequote}) ORDER BY cpu_use_m DESC LIMIT 10)\nGROUP BY time, pod ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "suffix: m",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 27,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 82
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Top 10 pods by memory",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(ts) AS time, pod, avg(mem_use_b) AS mem\nFROM observability.pod_inventory WHERE $__timeFilter(ts) AND namespace IN (${namespace:singlequote})\n  AND pod IN (SELECT pod FROM observability.pod_latest WHERE namespace IN (${namespace:singlequote}) ORDER BY mem_use_b DESC LIMIT 10)\nGROUP BY time, pod ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 28,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 82
+   }
+  },
+  {
+   "id": 29,
+   "type": "row",
+   "title": "7 \u00b7 Pod events & logs (ClickHouse = last 7 days \u00b7 S3 = older)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 90
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Kubernetes events (pod events)",
+   "description": "Filters at the top: Namespace, Pod / deployment regex, Event type, Reason regex, Log contains (searches the message). Set the time picker to 7 days for the full window.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT timestamp AS \"Time\", namespace AS \"Namespace\", pod_name AS \"Object\", object_kind AS \"Kind\", event_type AS \"Type\", reason AS \"Reason\", message AS \"Message\"\nFROM observability.k8s_events\nWHERE $__timeFilter(timestamp) AND namespace IN (${namespace:singlequote}) AND match(pod_name, '${pod_search:raw}')\n  AND event_type IN (${event_type:singlequote}) AND match(reason, '${reason:raw}') AND positionCaseInsensitive(message, '${log_search:raw}') > 0\nORDER BY timestamp DESC LIMIT 1000",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Type"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Normal": {
+            "color": "green",
+            "index": 0,
+            "text": "Normal"
+           },
+           "Warning": {
+            "color": "orange",
+            "index": 1,
+            "text": "Warning"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Message"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 520
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Time"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 170
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Object"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 260
+       },
+       {
+        "id": "links",
+        "value": [
+         {
+          "title": "Open logs",
+          "url": "/d/eks-observability?var-pod_search=${__value.raw}&${__url_time_range}"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 30,
+   "gridPos": {
+    "h": 10,
+    "w": 16,
+    "x": 0,
+    "y": 91
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Warning events by reason",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(timestamp) AS time, reason, count() AS events FROM observability.k8s_events\nWHERE $__timeFilter(timestamp) AND event_type = 'Warning' AND namespace IN (${namespace:singlequote}) AND match(pod_name, '${pod_search:raw}') AND match(reason, '${reason:raw}') AND positionCaseInsensitive(message, '${log_search:raw}') > 0 GROUP BY time, reason ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 25,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 31,
+   "gridPos": {
+    "h": 10,
+    "w": 8,
+    "x": 16,
+    "y": 91
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Log volume by level",
+   "description": "Level is guessed from the message text (error / warn / debug).",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(timestamp) AS time, multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') AS level, count() AS lines FROM observability.logs\nWHERE $__timeFilter(timestamp) AND namespace IN (${namespace:singlequote}) AND match(pod_name, '${pod_search:raw}') AND positionCaseInsensitive(message, '${log_search:raw}') > 0 AND (node IN (${node:singlequote}) OR node = '') AND match(container, '${container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${level:singlequote}) GROUP BY time, level ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 25,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 32,
+   "gridPos": {
+    "h": 6,
+    "w": 24,
+    "x": 0,
+    "y": 101
+   }
+  },
+  {
+   "type": "logs",
+   "title": "Pod logs (ClickHouse, searchable)",
+   "description": "Filters at the top: Node, Namespace, Pod / deployment regex, Container regex, Level, Log contains.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 2,
+     "queryType": "logs",
+     "rawSql": "SELECT timestamp, message AS body, multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') AS level, namespace, pod_name, container, node\nFROM observability.logs WHERE $__timeFilter(timestamp) AND namespace IN (${namespace:singlequote}) AND match(pod_name, '${pod_search:raw}') AND positionCaseInsensitive(message, '${log_search:raw}') > 0 AND (node IN (${node:singlequote}) OR node = '') AND match(container, '${container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${level:singlequote})\nORDER BY timestamp DESC LIMIT 1000",
+     "refId": "A"
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "wrapLogMessage": true,
+    "sortOrder": "Descending",
+    "enableLogDetails": true,
+    "prettifyLogMessage": false,
+    "dedupStrategy": "none"
+   },
+   "id": 33,
+   "gridPos": {
+    "h": 14,
+    "w": 24,
+    "x": 0,
+    "y": 107
+   }
+  },
+  {
+   "type": "table",
+   "title": "Older logs straight from the S3 archive (set s3_year / s3_month / s3_day at the top)",
+   "description": "Reads the gzip archive Fluent Bit writes to S3, through ClickHouse's s3() function. Only the chosen day's folder is scanned, so keep it to one day at a time (or use day=* for a whole month on small clusters).",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT timestamp AS \"Time\", namespace AS \"Namespace\", node AS \"Node\", pod_name AS \"Pod\", container AS \"Container\", multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') AS \"Level\", message AS \"Message\"\nFROM s3('https://${s3_bucket}.s3.${s3_region}.amazonaws.com/pod-logs/year=${s3_year}/month=${s3_month}/day=${s3_day}/**/*.gz',\n        'JSONEachRow', 'timestamp DateTime64(3), namespace String, node String, pod_name String, container String, message String', 'gzip')\nWHERE namespace IN (${namespace:singlequote}) AND match(pod_name, '${pod_search:raw}') AND positionCaseInsensitive(message, '${log_search:raw}') > 0 AND (node IN (${node:singlequote}) OR node = '') AND match(container, '${container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${level:singlequote})\nORDER BY timestamp DESC LIMIT 500\nSETTINGS date_time_input_format = 'best_effort', input_format_skip_unknown_fields = 1",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Message"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 700
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Time"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 170
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 34,
+   "gridPos": {
+    "h": 10,
+    "w": 24,
+    "x": 0,
+    "y": 121
+   }
+  },
+  {
+   "id": 35,
+   "type": "row",
+   "title": "8 \u00b7 Databases \u2014 connection details, RDS / Aurora, KeyDB and database-pod logs",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 131
+   },
+   "panels": []
+  },
+  {
+   "type": "table",
+   "title": "Managed databases \u2014 connection details (RDS / Aurora / ElastiCache)",
+   "description": "Read from the AWS API by the db-inventory collector every 5 minutes. Passwords are never collected - only endpoints, ports, engine, user NAME and network settings. The last column is a ready-to-use client command.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT region AS \"Region\", source AS \"Service\", identifier AS \"Instance\", cluster AS \"Cluster\", role AS \"Role\", engine AS \"Engine\", engine_version AS \"Version\",\n  instance_class AS \"Class\", status AS \"Status\", endpoint AS \"Endpoint\", port AS \"Port\", cluster_endpoint AS \"Writer / cluster endpoint\", reader_endpoint AS \"Reader endpoint\",\n  az AS \"AZ\", if(multi_az = 1, 'Yes', 'No') AS \"Multi-AZ\", master_user AS \"Master user\", db_name AS \"DB name\",\n  if(publicly_accessible = 1, 'PUBLIC', 'private') AS \"Access\", arrayStringConcat(security_groups, ', ') AS \"Security groups\",\n  if(encrypted = 1, 'Yes', 'No') AS \"Encrypted\", backup_retention AS \"Backup days\",\n  multiIf(positionCaseInsensitive(engine, 'postgres') > 0, concat('psql -h ', endpoint, ' -p ', toString(port), ' -U ', master_user, ' ', db_name), positionCaseInsensitive(engine, 'mysql') > 0 OR positionCaseInsensitive(engine, 'maria') > 0, concat('mysql -h ', endpoint, ' -P ', toString(port), ' -u ', master_user, ' -p'), positionCaseInsensitive(engine, 'redis') > 0 OR positionCaseInsensitive(engine, 'valkey') > 0, concat('redis-cli -h ', endpoint, ' -p ', toString(port)), positionCaseInsensitive(engine, 'memcached') > 0, concat('telnet ', endpoint, ' ', toString(port)), '') AS \"Connect command\"\nFROM observability.db_latest ORDER BY region, cluster, identifier",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Status"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "available": {
+            "color": "green",
+            "index": 0,
+            "text": "available"
+           },
+           "creating": {
+            "color": "yellow",
+            "index": 1,
+            "text": "creating"
+           },
+           "modifying": {
+            "color": "yellow",
+            "index": 2,
+            "text": "modifying"
+           },
+           "backing-up": {
+            "color": "blue",
+            "index": 3,
+            "text": "backing-up"
+           },
+           "rebooting": {
+            "color": "orange",
+            "index": 4,
+            "text": "rebooting"
+           },
+           "failed": {
+            "color": "red",
+            "index": 5,
+            "text": "failed"
+           },
+           "stopped": {
+            "color": "orange",
+            "index": 6,
+            "text": "stopped"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Access"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "PUBLIC": {
+            "color": "red",
+            "index": 0,
+            "text": "PUBLIC"
+           },
+           "private": {
+            "color": "green",
+            "index": 1,
+            "text": "private"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Endpoint"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 360
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Writer / cluster endpoint"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 360
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Reader endpoint"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 360
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Connect command"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 420
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Security groups"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 200
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 36,
+   "gridPos": {
+    "h": 8,
+    "w": 24,
+    "x": 0,
+    "y": 132
+   }
+  },
+  {
+   "type": "table",
+   "title": "In-cluster databases \u2014 connection details (Kubernetes services)",
+   "description": "Services whose name matches the 'DB pod regex' variable or that expose a database port (3306, 5432, 6379, 27017, 1433, 9042, 11211). Use the in-cluster address from inside the cluster.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT namespace AS \"Namespace\", name AS \"Service\", type AS \"Type\", dns AS \"In-cluster address\", arrayStringConcat(ports, ', ') AS \"Ports\",\n  cluster_ip AS \"ClusterIP\", external_host AS \"External host\",\n  multiIf(has(port_numbers, 5432), concat('psql -h ', dns, ' -p 5432'), has(port_numbers, 3306), concat('mysql -h ', dns, ' -P 3306 -u <user> -p'),\n          has(port_numbers, 6379), concat('redis-cli -h ', dns, ' -p 6379'), has(port_numbers, 27017), concat('mongosh --host ', dns, ':27017'),\n          has(port_numbers, 11211), concat('telnet ', dns, ' 11211'), '') AS \"Connect command\"\nFROM observability.service_latest WHERE match(name, '${db_pod_regex:raw}') OR hasAny(port_numbers, [3306, 5432, 6379, 27017, 1433, 9042, 11211]) ORDER BY namespace, name",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "In-cluster address"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 330
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Connect command"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 380
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "External host"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 300
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Type"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "ClusterIP": {
+            "color": "blue",
+            "index": 0,
+            "text": "ClusterIP"
+           },
+           "LoadBalancer": {
+            "color": "orange",
+            "index": 1,
+            "text": "LoadBalancer"
+           },
+           "NodePort": {
+            "color": "orange",
+            "index": 2,
+            "text": "NodePort"
+           },
+           "ExternalName": {
+            "color": "purple",
+            "index": 3,
+            "text": "ExternalName"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 37,
+   "gridPos": {
+    "h": 7,
+    "w": 24,
+    "x": 0,
+    "y": 140
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "RDS CPU %",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_cpuutilization_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "{{dbinstance_identifier}}",
+     "refId": "A",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     },
+     "min": 0,
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 38,
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 0,
+    "y": 147
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "RDS connections",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_database_connections_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "{{dbinstance_identifier}}",
+     "refId": "A",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 39,
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 8,
+    "y": 147
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "RDS freeable memory",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_freeable_memory_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "{{dbinstance_identifier}}",
+     "refId": "A",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 40,
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 16,
+    "y": 147
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "RDS free storage (Aurora: local) \u00b7 Aurora volume used",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_free_storage_space_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "free {{dbinstance_identifier}}",
+     "refId": "A",
+     "range": true
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_free_local_storage_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "free local {{dbinstance_identifier}}",
+     "refId": "B",
+     "range": true
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_volume_bytes_used_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "volume used {{dbinstance_identifier}}",
+     "refId": "C",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 41,
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 0,
+    "y": 154
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "RDS IOPS (read / write)",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_read_iops_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "read {{dbinstance_identifier}}",
+     "refId": "A",
+     "range": true
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_write_iops_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "write {{dbinstance_identifier}}",
+     "refId": "B",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "iops",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 42,
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 8,
+    "y": 154
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "RDS latency (read / write)",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_read_latency_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "read {{dbinstance_identifier}}",
+     "refId": "A",
+     "range": true
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "aws_rds_write_latency_average{dbinstance_identifier=~\"$rds\"}",
+     "legendFormat": "write {{dbinstance_identifier}}",
+     "refId": "B",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 43,
+   "gridPos": {
+    "h": 7,
+    "w": 8,
+    "x": 16,
+    "y": 154
+   }
+  },
+  {
+   "type": "stat",
+   "title": "KeyDB up",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "min(redis_up{instance=~\"$redis_inst\"})",
+     "legendFormat": "",
+     "refId": "A",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1000000000.0
+       }
+      ]
+     },
+     "noValue": "0",
+     "mappings": [
+      {
+       "type": "value",
+       "options": {
+        "0": {
+         "text": "DOWN",
+         "color": "red",
+         "index": 0
+        },
+        "1": {
+         "text": "UP",
+         "color": "green",
+         "index": 1
+        }
+       }
+      }
+     ]
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 44,
+   "gridPos": {
+    "h": 6,
+    "w": 3,
+    "x": 0,
+    "y": 161
+   }
+  },
+  {
+   "type": "stat",
+   "title": "KeyDB clients",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "sum(redis_connected_clients{instance=~\"$redis_inst\"})",
+     "legendFormat": "",
+     "refId": "A",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 45,
+   "gridPos": {
+    "h": 6,
+    "w": 3,
+    "x": 3,
+    "y": 161
+   }
+  },
+  {
+   "type": "stat",
+   "title": "KeyDB hit ratio",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "sum(rate(redis_keyspace_hits_total{instance=~\"$redis_inst\"}[5m])) / (sum(rate(redis_keyspace_hits_total{instance=~\"$redis_inst\"}[5m])) + sum(rate(redis_keyspace_misses_total{instance=~\"$redis_inst\"}[5m])))",
+     "legendFormat": "",
+     "refId": "A",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percentunit",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 0.5
+       },
+       {
+        "color": "green",
+        "value": 0.8
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 46,
+   "gridPos": {
+    "h": 6,
+    "w": 3,
+    "x": 6,
+    "y": 161
+   }
+  },
+  {
+   "type": "stat",
+   "title": "KeyDB keys",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "sum(redis_db_keys{instance=~\"$redis_inst\"})",
+     "legendFormat": "",
+     "refId": "A",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 47,
+   "gridPos": {
+    "h": 6,
+    "w": 3,
+    "x": 9,
+    "y": 161
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "KeyDB memory used vs max",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "redis_memory_used_bytes{instance=~\"$redis_inst\"}",
+     "legendFormat": "used {{instance}}",
+     "refId": "A",
+     "range": true
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "redis_memory_max_bytes{instance=~\"$redis_inst\"} > 0",
+     "legendFormat": "max {{instance}}",
+     "refId": "B",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 48,
+   "gridPos": {
+    "h": 6,
+    "w": 6,
+    "x": 12,
+    "y": 161
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "KeyDB ops/s \u00b7 evictions/s",
+   "description": "",
+   "datasource": {
+    "type": "prometheus",
+    "uid": "${ds_prom}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "sum by (instance)(rate(redis_commands_processed_total{instance=~\"$redis_inst\"}[5m]))",
+     "legendFormat": "ops {{instance}}",
+     "refId": "A",
+     "range": true
+    },
+    {
+     "datasource": {
+      "type": "prometheus",
+      "uid": "${ds_prom}"
+     },
+     "expr": "sum by (instance)(rate(redis_evicted_keys_total{instance=~\"$redis_inst\"}[5m]))",
+     "legendFormat": "evicted {{instance}}",
+     "refId": "B",
+     "range": true
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ops",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 49,
+   "gridPos": {
+    "h": 6,
+    "w": 6,
+    "x": 18,
+    "y": 161
+   }
+  },
+  {
+   "type": "table",
+   "title": "Database pods in the cluster (name matches the 'DB pod regex' variable)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT namespace AS \"Namespace\", pod AS \"Pod\", if(node = '', '(unscheduled)', node) AS \"Node\", state AS \"State\", restarts AS \"Restarts\", last_term_reason AS \"Last exit\",\n  round(cpu_use_m) AS \"CPU use (m)\", cpu_lim_m AS \"CPU limit (m)\", round(100 * cpu_use_m / nullIf(cpu_lim_m, 0), 1) AS \"CPU % of limit\",\n  mem_use_b AS \"Mem use\", mem_lim_b AS \"Mem limit\", round(100 * mem_use_b / nullIf(mem_lim_b, 0), 1) AS \"Mem % of limit\"\nFROM observability.pod_latest WHERE match(pod, '${db_pod_regex:raw}') ORDER BY namespace, pod",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "State"
+      },
+      "properties": [
+       {
+        "id": "mappings",
+        "value": [
+         {
+          "type": "value",
+          "options": {
+           "Running": {
+            "color": "green",
+            "index": 0,
+            "text": "Running"
+           },
+           "Succeeded": {
+            "color": "blue",
+            "index": 1,
+            "text": "Succeeded"
+           },
+           "Pending": {
+            "color": "yellow",
+            "index": 2,
+            "text": "Pending"
+           },
+           "NotReady": {
+            "color": "orange",
+            "index": 3,
+            "text": "NotReady"
+           },
+           "Terminating": {
+            "color": "orange",
+            "index": 4,
+            "text": "Terminating"
+           },
+           "Unschedulable": {
+            "color": "red",
+            "index": 5,
+            "text": "Unschedulable"
+           },
+           "CrashLoopBackOff": {
+            "color": "red",
+            "index": 6,
+            "text": "CrashLoopBackOff"
+           },
+           "ImagePullBackOff": {
+            "color": "red",
+            "index": 7,
+            "text": "ImagePullBackOff"
+           },
+           "ErrImagePull": {
+            "color": "red",
+            "index": 8,
+            "text": "ErrImagePull"
+           },
+           "Failed": {
+            "color": "red",
+            "index": 9,
+            "text": "Failed"
+           },
+           "CreateContainerConfigError": {
+            "color": "red",
+            "index": 10,
+            "text": "CreateContainerConfigError"
+           }
+          }
+         }
+        ]
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "color-background",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "custom.width",
+        "value": 130
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU use (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU limit (m)"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "suffix: m"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 0
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem use"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "CPU % of limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 75
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Mem % of limit"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "percent"
+       },
+       {
+        "id": "min",
+        "value": 0
+       },
+       {
+        "id": "max",
+        "value": 100
+       },
+       {
+        "id": "custom.cellOptions",
+        "value": {
+         "type": "gauge",
+         "mode": "basic"
+        }
+       },
+       {
+        "id": "thresholds",
+        "value": {
+         "mode": "absolute",
+         "steps": [
+          {
+           "color": "green",
+           "value": null
+          },
+          {
+           "color": "orange",
+           "value": 80
+          },
+          {
+           "color": "red",
+           "value": 90
+          }
+         ]
+        }
+       },
+       {
+        "id": "noValue",
+        "value": "no limit"
+       },
+       {
+        "id": "custom.width",
+        "value": 140
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 50,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 167
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Database log lines by level",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(timestamp) AS time, multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') AS level, count() AS lines FROM observability.logs\nWHERE $__timeFilter(timestamp) AND match(pod_name, '${db_pod_regex:raw}') AND positionCaseInsensitive(message, '${log_search:raw}') > 0 AND match(container, '${container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${level:singlequote}) GROUP BY time, level ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "custom": {
+      "drawStyle": "bars",
+      "lineWidth": 1,
+      "fillOpacity": 25,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "normal",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 51,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 167
+   }
+  },
+  {
+   "type": "logs",
+   "title": "Database logs (errors, slow queries, restarts) \u2014 KeyDB / Postgres / MySQL pods",
+   "description": "RDS engine logs (error / slowquery / general) are in CloudWatch Logs: add the CloudWatch data source and a Logs panel, see README \u00a79.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 2,
+     "queryType": "logs",
+     "rawSql": "SELECT timestamp, message AS body, multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info') AS level, namespace, pod_name, container\nFROM observability.logs WHERE $__timeFilter(timestamp) AND match(pod_name, '${db_pod_regex:raw}') AND positionCaseInsensitive(message, '${log_search:raw}') > 0 AND match(container, '${container:raw}') AND (multiIf(match(message, '(?i)(error|fatal|panic|exception|traceback)'), 'error', match(message, '(?i)(warn)'), 'warning', match(message, '(?i)(debug|trace)'), 'debug', 'info')) IN (${level:singlequote})\nORDER BY timestamp DESC LIMIT 1000",
+     "refId": "A"
+    }
+   ],
+   "options": {
+    "showTime": true,
+    "wrapLogMessage": true,
+    "sortOrder": "Descending",
+    "enableLogDetails": true,
+    "prettifyLogMessage": false,
+    "dedupStrategy": "none"
+   },
+   "id": 52,
+   "gridPos": {
+    "h": 12,
+    "w": 24,
+    "x": 0,
+    "y": 175
+   }
+  },
+  {
+   "id": 53,
+   "type": "row",
+   "title": "9 \u00b7 ClickHouse & pipeline health (monitoring the monitor)",
+   "collapsed": false,
+   "gridPos": {
+    "h": 1,
+    "w": 24,
+    "x": 0,
+    "y": 187
+   },
+   "panels": []
+  },
+  {
+   "type": "stat",
+   "title": "Logs lag (s)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT dateDiff('second', max(timestamp), now()) FROM observability.logs",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 120
+       },
+       {
+        "color": "red",
+        "value": 300
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 54,
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 188
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Events lag (s)",
+   "description": "Events can be quiet on a healthy cluster, so this has a loose threshold.",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT dateDiff('second', max(timestamp), now()) FROM observability.k8s_events",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 900
+       },
+       {
+        "color": "red",
+        "value": 3600
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 55,
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 188
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Inventory lag (s)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT dateDiff('second', max(ts), now()) FROM observability.node_inventory",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 180
+       },
+       {
+        "color": "red",
+        "value": 600
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 56,
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 188
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Metrics lag (s)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT dateDiff('second', max(timestamp), now()) FROM prometheusQuery('metrics', 'prometheus', 'up', now())",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 120
+       },
+       {
+        "color": "red",
+        "value": 300
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 57,
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 188
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Active merges",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT count() FROM system.merges",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 10
+       },
+       {
+        "color": "red",
+        "value": 30
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 58,
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 188
+   }
+  },
+  {
+   "type": "stat",
+   "title": "Unfinished mutations",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT count() FROM system.mutations WHERE is_done = 0",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1
+       },
+       {
+        "color": "red",
+        "value": 5
+       }
+      ]
+     },
+     "noValue": "0"
+    },
+    "overrides": []
+   },
+   "options": {
+    "colorMode": "background",
+    "graphMode": "none",
+    "textMode": "value",
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": false
+    }
+   },
+   "id": 59,
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 20,
+    "y": 188
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Query latency (SELECT) p50 / p95 / p99 in ms",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(event_time) AS time, quantile(0.5)(query_duration_ms) AS p50, quantile(0.95)(query_duration_ms) AS p95, quantile(0.99)(query_duration_ms) AS p99\nFROM system.query_log WHERE $__timeFilter(event_time) AND type = 'QueryFinish' AND query_kind = 'Select' GROUP BY time ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "ms",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 60,
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 0,
+    "y": 192
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Rows inserted / min \u00b7 failed queries",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 0,
+     "queryType": "timeseries",
+     "rawSql": "SELECT $__timeInterval(event_time) AS time, sumIf(written_rows, query_kind = 'Insert' AND type = 'QueryFinish') AS rows_inserted,\n  countIf(type IN ('ExceptionWhileProcessing', 'ExceptionBeforeStart')) AS failed_queries\nFROM system.query_log WHERE $__timeFilter(event_time) GROUP BY time ORDER BY time",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "none",
+     "custom": {
+      "drawStyle": "line",
+      "lineWidth": 1,
+      "fillOpacity": 8,
+      "showPoints": "never",
+      "spanNulls": true,
+      "stacking": {
+       "mode": "none",
+       "group": "A"
+      }
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "lastNotNull",
+      "max"
+     ]
+    },
+    "tooltip": {
+     "mode": "multi",
+     "sort": "desc"
+    }
+   },
+   "id": 61,
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 8,
+    "y": 192
+   }
+  },
+  {
+   "type": "bargauge",
+   "title": "ClickHouse disk used %",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT name, round(100 * (1 - free_space / total_space), 1) AS used_pct FROM system.disks",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "min": 0,
+     "max": 100,
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 70
+       },
+       {
+        "color": "red",
+        "value": 85
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "displayMode": "gradient",
+    "orientation": "horizontal",
+    "showUnfilled": true,
+    "reduceOptions": {
+     "calcs": [
+      "lastNotNull"
+     ],
+     "fields": "",
+     "values": true
+    }
+   },
+   "id": 62,
+   "gridPos": {
+    "h": 8,
+    "w": 8,
+    "x": 16,
+    "y": 192
+   }
+  },
+  {
+   "type": "table",
+   "title": "Table sizes & parts",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT database AS \"Database\", table AS \"Table\", count() AS \"Active parts\", sum(rows) AS \"Rows\",\n  sum(bytes_on_disk) AS \"On disk\", round(sum(data_uncompressed_bytes) / nullIf(sum(data_compressed_bytes), 0), 1) AS \"Compression x\",\n  min(min_time) AS \"Oldest data\"\nFROM system.parts WHERE active AND database IN ('observability', 'metrics') GROUP BY database, table ORDER BY sum(bytes_on_disk) DESC",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "On disk"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "bytes"
+       },
+       {
+        "id": "custom.width",
+        "value": 110
+       },
+       {
+        "id": "decimals",
+        "value": 1
+       }
+      ]
+     },
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Rows"
+      },
+      "properties": [
+       {
+        "id": "unit",
+        "value": "short"
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 63,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 200
+   }
+  },
+  {
+   "type": "table",
+   "title": "Slowest queries (selected time range)",
+   "description": "",
+   "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "${ds_ch}"
+   },
+   "targets": [
+    {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "rawSql": "SELECT event_time AS \"Time\", user AS \"User\", query_duration_ms AS \"ms\", read_rows AS \"Rows read\", formatReadableSize(memory_usage) AS \"Memory\", substring(query, 1, 200) AS \"Query\"\nFROM system.query_log WHERE $__timeFilter(event_time) AND type = 'QueryFinish' AND query NOT LIKE '%system.query_log%' ORDER BY query_duration_ms DESC LIMIT 20",
+     "refId": "A"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "custom": {
+      "filterable": true,
+      "align": "auto",
+      "cellOptions": {
+       "type": "auto"
+      },
+      "inspect": false
+     },
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "green",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 1e+18
+       }
+      ]
+     }
+    },
+    "overrides": [
+     {
+      "matcher": {
+       "id": "byName",
+       "options": "Query"
+      },
+      "properties": [
+       {
+        "id": "custom.width",
+        "value": 480
+       }
+      ]
+     }
+    ]
+   },
+   "options": {
+    "showHeader": true,
+    "cellHeight": "sm",
+    "footer": {
+     "show": false,
+     "reducer": [
+      "sum"
+     ],
+     "fields": ""
+    },
+    "sortBy": []
+   },
+   "id": 64,
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 200
+   }
+  }
+ ],
+ "annotations": {
+  "list": [
+   {
+    "builtIn": 1,
+    "datasource": {
+     "type": "grafana",
+     "uid": "-- Grafana --"
+    },
+    "enable": true,
+    "hide": true,
+    "iconColor": "rgba(0, 211, 255, 1)",
+    "name": "Annotations & Alerts",
+    "type": "dashboard"
+   },
+   {
+    "name": "Warning events (OOMKilled, BackOff \u2026)",
+    "enable": false,
+    "iconColor": "orange",
+    "datasource": {
+     "type": "grafana-clickhouse-datasource",
+     "uid": "${ds_ch}"
+    },
+    "target": {
+     "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${ds_ch}"
+     },
+     "editorType": "sql",
+     "format": 1,
+     "queryType": "table",
+     "refId": "Anno",
+     "rawSql": "SELECT timestamp AS time, concat(reason, ': ', pod_name) AS text FROM observability.k8s_events WHERE $__timeFilter(timestamp) AND event_type = 'Warning' AND namespace IN (${namespace:singlequote}) LIMIT 500"
+    }
+   }
+  ]
+ },
+ "links": [
+  {
+   "title": "Yesterday",
+   "type": "link",
+   "url": "/d/eks-observability?from=now-1d%2Fd&to=now-1d%2Fd",
+   "icon": "calendar-alt",
+   "includeVars": true,
+   "keepTime": false,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Yesterday 00:00 to 23:59"
+  },
+  {
+   "title": "Pod Logs Explorer",
+   "type": "link",
+   "url": "/d/eks-logs-explorer",
+   "icon": "doc",
+   "includeVars": false,
+   "keepTime": true,
+   "targetBlank": false,
+   "asDropdown": false,
+   "tags": [],
+   "tooltip": "Namespace / deployment / pod / time-range log search"
+  }
+ ]
+}
